@@ -7,6 +7,16 @@
 #define RST_PIN 9 // PINO DE RESET
 
 MFRC522 rfid(SS_PIN, RST_PIN); // PASSAGEM DE PARÂMETROS REFERENTE AOS PINOS
+void openValve()
+{
+  Serial.println("abrindo válvula");
+}
+
+void closeValve()
+{
+  Serial.println("Fechando válvula");
+}
+
 class consumption
 {
   const static int cardsLimit = 50;
@@ -37,7 +47,7 @@ private:
   }
 
 public:
-  consumption(){firstEmptyIndex = 1};
+  consumption(){firstEmptyIndex = 1;};
   void addConsunmption(String name, unsigned long consumption)
   {
     int cardIndex = findCardIndex(name);
@@ -49,13 +59,10 @@ public:
   }
 };
 
-
-
 bool cardDetected;
 unsigned long cardStart;
 String strID;
 consumption consumptions;
-
 
 void setup()
 {
@@ -65,7 +72,7 @@ void setup()
 
   cardDetected = false;
   cardStart = 0;
-  consumptions  = consumption();
+  consumptions = consumption();
 }
 
 void loop()
@@ -111,14 +118,21 @@ void loop()
       Serial.println(totalTime);
     }
   }
-}
+  if (Serial.available())
+  { // Enquanto a Serial receber dados
+    delay(10);
+    String comando = "";
 
-void openValve()
-{
-  // TODO: setar rele
-}
-
-void closeValve()
-{
-  // TODO: setar rele
+    while (Serial.available())
+    {                                 // Enquanto receber comandos
+      comando += (char)Serial.read(); // Lê os caractéres
+    }
+    if (comando == "a")
+    {
+      Serial.println("recebi a");
+    }
+    if (comando == "b")
+    {
+    }
+  }
 }
