@@ -7,10 +7,6 @@
 #define RST_PIN 9 // PINO DE RESET
 
 MFRC522 rfid(SS_PIN, RST_PIN); // PASSAGEM DE PARÂMETROS REFERENTE AOS PINOS
-
-bool cardDetected;
-unsigned long cardStart;
-String strID;
 class consumption
 {
   const static int cardsLimit = 50;
@@ -53,6 +49,14 @@ public:
   }
 };
 
+
+
+bool cardDetected;
+unsigned long cardStart;
+String strID;
+consumption consumptions;
+
+
 void setup()
 {
   Serial.begin(9600); // INICIALIZA A SERIAL
@@ -61,6 +65,7 @@ void setup()
 
   cardDetected = false;
   cardStart = 0;
+  consumptions  = consumption();
 }
 
 void loop()
@@ -98,8 +103,10 @@ void loop()
     {
       closeValve();
       unsigned long totalTime = millis() - cardStart;
+      consumptions.addConsunmption(strID, totalTime);
       cardStart = 0;
       Serial.println("Card saiu");
+      Serial.println(strID);
       Serial.print("Tempo total: ");
       Serial.println(totalTime);
     }
