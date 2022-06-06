@@ -24,7 +24,7 @@ class consumption
   const static int cardsLimit = 50;
 
 private:
-  char cardUIDs[cardsLimit][uidSize+1];
+  char cardUIDs[cardsLimit][uidSize + 1];
   unsigned long consumptions[cardsLimit];
   int firstEmptyIndex;
 
@@ -61,12 +61,23 @@ public:
       cardIndex = setNewCard(uid);
     }
     consumptions[cardIndex] += consumption;
-  }
+  };
+  String dumpConsumptions (){
+    String dump = "";
+    for (int i = 1; i < firstEmptyIndex; i++)
+    {
+      dump += String(cardUIDs[i]) +
+              String(':') + 
+              String(consumptions[i]) + 
+              String("\r\n");
+    }
+    return dump;
+  };
 };
 
 bool checkCardRemoval()
 {
-  control = 0;
+  uint8_t control = 0;
   for (int i = 0; i < 3; i++)
   {
     if (!rfid.PICC_IsNewCardPresent())
@@ -102,9 +113,8 @@ bool checkCardRemoval()
 bool cardDetected;
 unsigned long cardStart;
 String strID;
-char bytesId[4];
+char bytesId[uidSize+1];
 consumption consumptions;
-uint8_t control;
 
 void setup()
 {
@@ -115,7 +125,6 @@ void setup()
   cardDetected = false;
   cardStart = 0;
   consumptions = consumption();
-  control = 0x00;
 }
 
 void loop()
@@ -177,6 +186,23 @@ void loop()
     }
     if (comando == "b")
     {
+      char time[5] = "bbbb";
+      consumptions.addConsunmption(time, 10);
+    }
+    if (comando == "c")
+    {
+      char time[5] = "cccc";
+      consumptions.addConsunmption(time, 10);
+    }
+    if (comando == "d")
+    {
+      char time[5] = "dddd";
+      consumptions.addConsunmption(time, 10);
+    }
+    if (comando == "e")
+    {
+      Serial.println("Dumping");
+      Serial.println(consumptions.dumpConsumptions());
     }
   }
 }
