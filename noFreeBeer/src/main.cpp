@@ -25,7 +25,7 @@ class consumption
 
 private:
   char cardUIDs[cardsLimit][uidSize + 1];
-  unsigned long consumptions[cardsLimit];
+  unsigned int consumptions[cardsLimit];
   int firstEmptyIndex;
 
   int findCardIndex(String uid)
@@ -53,7 +53,7 @@ public:
   {
     firstEmptyIndex = 1;
   };
-  void addConsunmption(char uid[4], unsigned long consumption)
+  void addConsunmption(char uid[4], unsigned int consumption)
   {
     int cardIndex = findCardIndex(uid);
     if (cardIndex == 0)
@@ -66,9 +66,11 @@ public:
     String dump = "";
     for (int i = 1; i < firstEmptyIndex; i++)
     {
+      float consumptionSeconds = float(consumptions[i])/100;
       dump += String(cardUIDs[i]) +
               String(':') + 
-              String(consumptions[i]) + 
+              String(consumptionSeconds) + 
+              String( " s") +
               String("\r\n");
     }
     return dump;
@@ -160,7 +162,8 @@ void loop()
     {
       closeValve();
       unsigned long totalTime = millis() - cardStart;
-      consumptions.addConsunmption(bytesId, totalTime);
+      unsigned int openTimeCS = totalTime/10;
+      consumptions.addConsunmption(bytesId, openTimeCS);
       cardStart = 0;
       Serial.println("Card saiu");
       Serial.println(strID);
