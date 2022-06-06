@@ -6,6 +6,8 @@
 #define SS_PIN 10 // PINO SDA
 #define RST_PIN 9 // PINO DE RESET
 
+#define uidSize 4
+
 MFRC522 rfid(SS_PIN, RST_PIN); // PASSAGEM DE PARÂMETROS REFERENTE AOS PINOS
 void openValve()
 {
@@ -22,15 +24,15 @@ class consumption
   const static int cardsLimit = 50;
 
 private:
-  String cardNames[cardsLimit];
+  char cardUIDs[cardsLimit][uidSize+1];
   unsigned long consumptions[cardsLimit];
   int firstEmptyIndex;
 
-  int findCardIndex(String name)
+  int findCardIndex(String uid)
   {
     for (int i = 0; i < cardsLimit; i++)
     {
-      if (name == cardNames[i])
+      if (uid == cardUIDs[i])
       {
         return i;
       }
@@ -38,22 +40,25 @@ private:
     return 0;
   }
 
-  int setNewCard(String name)
+  int setNewCard(char uid[4])
   {
-    cardNames[firstEmptyIndex] = name;
+    strncpy(cardUIDs[firstEmptyIndex], uid, 4);
     consumptions[firstEmptyIndex] = 0;
 
     return (firstEmptyIndex++); // rreturn element and add one to the next one
   }
 
 public:
-  consumption() { firstEmptyIndex = 1; };
-  void addConsunmption(String name, unsigned long consumption)
+  consumption()
   {
-    int cardIndex = findCardIndex(name);
+    firstEmptyIndex = 1;
+  };
+  void addConsunmption(char uid[4], unsigned long consumption)
+  {
+    int cardIndex = findCardIndex(uid);
     if (cardIndex == 0)
     { // New card setting new
-      cardIndex = setNewCard(name);
+      cardIndex = setNewCard(uid);
     }
     consumptions[cardIndex] += consumption;
   }
@@ -97,6 +102,7 @@ bool checkCardRemoval()
 bool cardDetected;
 unsigned long cardStart;
 String strID;
+char bytesId[4];
 consumption consumptions;
 uint8_t control;
 
@@ -130,13 +136,13 @@ void loop()
             (rfid.uid.uidByte[i] < 0x10 ? "0" : "") +
             String(rfid.uid.uidByte[i], HEX) +
             (i != 3 ? ":" : "");
+        bytesId[i] = rfid.uid.uidByte[i];
       }
       strID.toUpperCase();
       /***FIM DO BLOCO DE CÓDIGO RESPONSÁVEL POR GERAR A TAG RFID LIDA***/
 
       Serial.print("Identificador (UID) da tag: "); // IMPRIME O TEXTO NA SERIAL
       Serial.println(strID);                        // IMPRIME NA SERIAL O UID DA TAG RFID
-
     }
   }
   else
@@ -145,7 +151,7 @@ void loop()
     {
       closeValve();
       unsigned long totalTime = millis() - cardStart;
-      consumptions.addConsunmption(strID, totalTime);
+      consumptions.addConsunmption(bytesId, totalTime);
       cardStart = 0;
       Serial.println("Card saiu");
       Serial.println(strID);
