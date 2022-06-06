@@ -47,7 +47,7 @@ private:
   }
 
 public:
-  consumption(){firstEmptyIndex = 1;};
+  consumption() { firstEmptyIndex = 1; };
   void addConsunmption(String name, unsigned long consumption)
   {
     int cardIndex = findCardIndex(name);
@@ -59,10 +59,46 @@ public:
   }
 };
 
+bool checkCardRemoval()
+{
+  control = 0;
+  for (int i = 0; i < 3; i++)
+  {
+    if (!rfid.PICC_IsNewCardPresent())
+    {
+      if (rfid.PICC_ReadCardSerial())
+      {
+        // Serial.print('a');
+        control |= 0x16;
+      }
+      if (rfid.PICC_ReadCardSerial())
+      {
+        // Serial.print('b');
+        control |= 0x16;
+      }
+      // Serial.print('c');
+      control += 0x1;
+    }
+    // Serial.print('d');
+    control += 0x4;
+  }
+
+  // Serial.println(control);
+  if (control == 13 || control == 14)
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
 bool cardDetected;
 unsigned long cardStart;
 String strID;
 consumption consumptions;
+uint8_t control;
 
 void setup()
 {
@@ -73,6 +109,7 @@ void setup()
   cardDetected = false;
   cardStart = 0;
   consumptions = consumption();
+  control = 0x00;
 }
 
 void loop()
@@ -100,13 +137,11 @@ void loop()
       Serial.print("Identificador (UID) da tag: "); // IMPRIME O TEXTO NA SERIAL
       Serial.println(strID);                        // IMPRIME NA SERIAL O UID DA TAG RFID
 
-      rfid.PICC_HaltA();      // PARADA DA LEITURA DO CARTÃO
-      rfid.PCD_StopCrypto1(); // PARADA DA CRIPTOGRAFIA NO PCD
     }
   }
   else
   {
-    if (!rfid.PICC_ReadCardSerial())
+    if (checkCardRemoval())
     {
       closeValve();
       unsigned long totalTime = millis() - cardStart;
@@ -116,6 +151,9 @@ void loop()
       Serial.println(strID);
       Serial.print("Tempo total: ");
       Serial.println(totalTime);
+
+      rfid.PICC_HaltA();      // PARADA DA LEITURA DO CARTÃO
+      rfid.PCD_StopCrypto1(); // PARADA DA CRIPTOGRAFIA NO PCD
     }
   }
   if (Serial.available())
