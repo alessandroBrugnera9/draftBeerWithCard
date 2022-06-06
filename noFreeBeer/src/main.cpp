@@ -137,6 +137,8 @@ unsigned long cardStart;
 String strID;
 char bytesId[uidSize + 1];
 consumption consumptions;
+unsigned long routineSaveMillis;
+unsigned long intervalToSaveEeprom;
 
 void setup()
 {
@@ -147,6 +149,8 @@ void setup()
   cardDetected = false;
   cardStart = 0;
   consumptions = consumption();
+  routineSaveMillis=millis();
+  intervalToSaveEeprom =  5*1000*60;
 }
 
 void loop()
@@ -194,6 +198,17 @@ void loop()
       rfid.PCD_StopCrypto1(); // PARADA DA CRIPTOGRAFIA NO PCD
     }
   }
+
+  if ((millis()-routineSaveMillis)>intervalToSaveEeprom)
+  {
+    // It wont overflow because it reaches 50 days running
+    consumptions.save2Eeprom();
+    routineSaveMillis=millis;
+  }
+  
+
+
+
   if (Serial.available())
   { // Enquanto a Serial receber dados
     delay(10);
