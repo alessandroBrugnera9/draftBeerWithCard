@@ -2,6 +2,7 @@
 #include <SoftwareSerial.h>
 #include <MFRC522.h>
 #include <SPI.h> //INCLUSÃO DE BIBLIOTECA
+#include <EEPROM.h>
 
 #define SS_PIN 10 // PINO SDA
 #define RST_PIN 9 // PINO DE RESET
@@ -62,19 +63,38 @@ public:
     }
     consumptions[cardIndex] += consumption;
   };
-  String dumpConsumptions (){
+  String dumpConsumptions()
+  {
     String dump = "";
     for (int i = 1; i < firstEmptyIndex; i++)
     {
-      float consumptionSeconds = float(consumptions[i])/100;
+      float consumptionSeconds = float(consumptions[i]) / 100;
       dump += String(cardUIDs[i]) +
-              String(':') + 
-              String(consumptionSeconds) + 
-              String( " s") +
+              String(':') +
+              String(consumptionSeconds) +
+              String(" s") +
               String("\r\n");
     }
     return dump;
   };
+  void save2Eeprom()
+  {
+    EEPROM.put(0,
+               this->firstEmptyIndex);
+    EEPROM.put(sizeof(this->firstEmptyIndex),
+               this->consumptions);
+    EEPROM.put(sizeof(this->firstEmptyIndex) + sizeof(this->cardUIDs),
+               this->cardUIDs);
+  }
+  void loadFromEeprom()
+  {
+    EEPROM.get(0,
+               this->firstEmptyIndex);
+    EEPROM.get(sizeof(this->firstEmptyIndex),
+               this->consumptions);
+    EEPROM.get(sizeof(this->firstEmptyIndex) + sizeof(this->cardUIDs),
+               this->cardUIDs);
+  }
 };
 
 bool checkCardRemoval()
@@ -115,7 +135,7 @@ bool checkCardRemoval()
 bool cardDetected;
 unsigned long cardStart;
 String strID;
-char bytesId[uidSize+1];
+char bytesId[uidSize + 1];
 consumption consumptions;
 
 void setup()
@@ -162,7 +182,7 @@ void loop()
     {
       closeValve();
       unsigned long totalTime = millis() - cardStart;
-      unsigned int openTimeCS = totalTime/10;
+      unsigned int openTimeCS = totalTime / 10;
       consumptions.addConsunmption(bytesId, openTimeCS);
       cardStart = 0;
       Serial.println("Card saiu");
@@ -206,6 +226,16 @@ void loop()
     {
       Serial.println("Dumping");
       Serial.println(consumptions.dumpConsumptions());
+    }
+    if (comando == "f")
+    {
+      Serial.println("Saving to EEPROM");
+      consumptions.save2Eeprom();
+    }
+    if (comando == "g")
+    {
+      Serial.println("Loading from EEPROM");
+      consumptions.loadFromEeprom();
     }
   }
 }
