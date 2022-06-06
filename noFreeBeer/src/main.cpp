@@ -150,8 +150,8 @@ void setup()
   cardDetected = false;
   cardStart = 0;
   consumptions = consumption();
-  routineSaveMillis=millis();
-  intervalToSaveEeprom =  5*1000*60;
+  routineSaveMillis = millis();
+  intervalToSaveEeprom = 300000L;
   routineChangedBool = false;
 }
 
@@ -190,7 +190,7 @@ void loop()
       unsigned long totalTime = millis() - cardStart;
       unsigned int openTimeCS = totalTime / 10;
       consumptions.addConsunmption(bytesId, openTimeCS);
-      routineChangedBool=true;
+      routineChangedBool = true;
       cardStart = 0;
       Serial.println("Card saiu");
       Serial.println(strID);
@@ -202,18 +202,16 @@ void loop()
     }
   }
 
-  if ((millis()-routineSaveMillis)>intervalToSaveEeprom)
+  if ((millis() - routineSaveMillis) > intervalToSaveEeprom)
   {
     // It wont overflow because it reaches 50 days running
-    if (routineChangedBool) {
-    consumptions.save2Eeprom();
-    routineSaveMillis=millis;
+    if (routineChangedBool)
+    {
+      consumptions.save2Eeprom();
+      routineSaveMillis = millis();
     }
-    routineChangedBool=false;
+    routineChangedBool = false;
   }
-  
-
-
 
   if (Serial.available())
   { // Enquanto a Serial receber dados
