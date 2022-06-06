@@ -139,6 +139,7 @@ char bytesId[uidSize + 1];
 consumption consumptions;
 unsigned long routineSaveMillis;
 unsigned long intervalToSaveEeprom;
+bool routineChangedBool;
 
 void setup()
 {
@@ -151,6 +152,7 @@ void setup()
   consumptions = consumption();
   routineSaveMillis=millis();
   intervalToSaveEeprom =  5*1000*60;
+  routineChangedBool = false;
 }
 
 void loop()
@@ -188,6 +190,7 @@ void loop()
       unsigned long totalTime = millis() - cardStart;
       unsigned int openTimeCS = totalTime / 10;
       consumptions.addConsunmption(bytesId, openTimeCS);
+      routineChangedBool=true;
       cardStart = 0;
       Serial.println("Card saiu");
       Serial.println(strID);
@@ -202,8 +205,11 @@ void loop()
   if ((millis()-routineSaveMillis)>intervalToSaveEeprom)
   {
     // It wont overflow because it reaches 50 days running
+    if (routineChangedBool) {
     consumptions.save2Eeprom();
     routineSaveMillis=millis;
+    }
+    routineChangedBool=false;
   }
   
 
